@@ -47,8 +47,23 @@ func (CreateXRequest) Path() string {
 	return "/api/v1/x"
 }
 
-func (r CreateXRequest) GetJSONBody() interface{} {
+func (r CreateXRequest) BodyJSON() interface{} {
 	return r
+}
+
+func (r CreateXRequest) Validate() error {
+	if r.ID == "" {
+		return fmt.Errorf("id is required")
+	}
+
+	return nil
+}
+
+func (r CreateXRequest) Header() http.Header {
+	v := http.Header{}
+	v.Set("X-Info", "example")
+
+	return v
 }
 
 type CreateXResponse struct {
@@ -70,6 +85,13 @@ func Example() {
 		if r.URL.Path != "/api/v1/x" {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(`{"error": "invalid request path"}`))
+			return
+		}
+
+		// check request header
+		if r.Header.Get("X-Info") != "example" {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(`{"error": "invalid request header"}`))
 			return
 		}
 

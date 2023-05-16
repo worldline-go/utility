@@ -11,23 +11,46 @@ import (
 )
 
 type Request interface {
+	// Method returns the HTTP method.
 	Method() string
+	// Path returns the path to be sent.
 	Path() string
 }
 
+type Header interface {
+	// Header returns the header to be sent.
+	Header() http.Header
+}
+
 type RequestValidator interface {
+	// Validate returns error if request is invalid.
 	Validate() error
 }
 
 type QueryStringGenerator interface {
+	// ToQuery returns the query string to be sent.
 	ToQuery() url.Values
 }
 
-type JSONBodyFlag interface {
-	GetJSONBody() interface{}
+type BodyJSON interface {
+	// BodyJSON can return any type that can be marshaled to JSON.
+	// Automatically sets Content-Type to application/json.
+	BodyJSON() interface{}
 }
 
+type Body interface {
+	// Body returns the body to be sent.
+	Body() io.Reader
+}
+
+// DoWithFunc sends an HTTP request and calls the response function.
+//
+// Request additional implements RequestValidator, QueryStringGenerator, Header, Body, BodyJSON
 func (c *Client) DoWithFunc(ctx context.Context, req Request, fn func(*http.Response) error) error {
+	if c.BaseURL == nil {
+		return fmt.Errorf("base url is required")
+	}
+
 	if v, ok := req.(RequestValidator); ok {
 		if err := v.Validate(); err != nil {
 			return fmt.Errorf("%w: %v", ErrValidating, err)
@@ -43,12 +66,23 @@ func (c *Client) DoWithFunc(ctx context.Context, req Request, fn func(*http.Resp
 	}
 
 	var (
-		header = make(http.Header)
+		header http.Header
 		body   io.Reader
 	)
 
-	if jb, ok := req.(JSONBodyFlag); ok {
-		bodyGet := jb.GetJSONBody()
+	// set default header
+	if h, ok := req.(Header); ok {
+		header = h.Header()
+	}
+
+	if header == nil {
+		header = make(http.Header)
+	}
+
+	if b, ok := req.(Body); ok {
+		body = b.Body()
+	} else if jb, ok := req.(BodyJSON); ok {
+		bodyGet := jb.BodyJSON()
 
 		bodyData, err := json.Marshal(bodyGet)
 		if err != nil {
@@ -58,10 +92,6 @@ func (c *Client) DoWithFunc(ctx context.Context, req Request, fn func(*http.Resp
 		body = bytes.NewReader(bodyData)
 
 		header.Set("Content-Type", "application/json")
-	}
-
-	if c.BaseURL == nil {
-		return fmt.Errorf("base url is required")
 	}
 
 	uSend := c.BaseURL.ResolveReference(u)
@@ -86,6 +116,9 @@ func (c *Client) DoWithFunc(ctx context.Context, req Request, fn func(*http.Resp
 	return fn(httpResp)
 }
 
+// Do sends an HTTP request and json unmarshals the response body to data.
+//
+// Do work same as DoWithFunc with defaultResponseFunc.
 func (c *Client) Do(ctx context.Context, req Request, resp interface{}) error {
 	fn := func(r *http.Response) error { return defaultResponseFunc(r, resp) }
 

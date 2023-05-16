@@ -3,6 +3,7 @@ module github.com/worldline-go/utility/httpx
 go 1.19
 
 require (
+	github.com/go-test/deep v1.1.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-retryablehttp v0.7.2
 	github.com/rs/zerolog v1.29.1
