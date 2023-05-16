@@ -9,20 +9,12 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 )
 
-type RetryCodesType string
-
-const RetryCodesValue RetryCodesType = "retryCodeValue"
-
 var ResponseErrLimit int64 = 1024
 
 type Retry struct {
 	DisableRetry        bool
 	DisabledStatusCodes []int
 	EnabledStatusCodes  []int
-}
-
-func WithRetryCodes(ctx context.Context, retryCodes *Retry) context.Context {
-	return context.WithValue(ctx, RetryCodesValue, retryCodes)
 }
 
 // RetryPolicy provides a default callback for Client.CheckRetry, which
@@ -33,13 +25,11 @@ func RetryPolicy(ctx context.Context, resp *http.Response, err error) (bool, err
 		return false, ctx.Err()
 	}
 
-	retryCodes, _ := ctx.Value(RetryCodesValue).(*Retry)
+	if retryCodes, ok := requestCtxGet[rValueRetryType](ctx, rValueRetry); ok {
+		if retryCodes.DisableRetry {
+			return false, nil
+		}
 
-	if retryCodes != nil && retryCodes.DisableRetry {
-		return false, nil
-	}
-
-	if retryCodes != nil {
 		for _, disabledStatusCode := range retryCodes.DisabledStatusCodes {
 			if resp.StatusCode == disabledStatusCode {
 				return false, nil

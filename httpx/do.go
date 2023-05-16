@@ -96,6 +96,13 @@ func (c *Client) DoWithFunc(ctx context.Context, req Request, fn func(*http.Resp
 
 	uSend := c.BaseURL.ResolveReference(u)
 
+	// add context values
+	if rHeader, ok := requestCtxGet[rValueHeaderType](ctx, rValueHeader); ok {
+		for k := range rHeader {
+			header.Set(k, rHeader.Get(k))
+		}
+	}
+
 	httpReq, _ := http.NewRequestWithContext(ctx, req.Method(), uSend.String(), body)
 	httpReq.Header = header
 

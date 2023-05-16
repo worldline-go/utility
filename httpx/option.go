@@ -45,108 +45,108 @@ type optionClient struct {
 	Backoff retryablehttp.Backoff
 }
 
-// Option is a function that configures the client.
-type Option func(*optionClient)
+// OptionClient is a function that configures the client.
+type OptionClient func(*optionClient)
 
 // WithHttpClient configures the client to use the provided http client.
-func WithHttpClient(httpClient *http.Client) Option {
+func WithHttpClient(httpClient *http.Client) OptionClient {
 	return func(o *optionClient) {
 		o.HttpClient = httpClient
 	}
 }
 
-func WithPooledClient(pooledClient bool) Option {
+func WithPooledClient(pooledClient bool) OptionClient {
 	return func(o *optionClient) {
 		o.PooledClient = pooledClient
 	}
 }
 
 // WithTransportWrapper configures the client to wrap the default transport.
-func WithTransportWrapper(f func(context.Context, http.RoundTripper) (http.RoundTripper, error)) Option {
+func WithTransportWrapper(f func(context.Context, http.RoundTripper) (http.RoundTripper, error)) OptionClient {
 	return func(o *optionClient) {
 		o.TransportWrapper = f
 	}
 }
 
 // WithCtx configures the client to use the provided context.
-func WithCtx(ctx context.Context) Option {
+func WithCtx(ctx context.Context) OptionClient {
 	return func(o *optionClient) {
 		o.Ctx = ctx
 	}
 }
 
 // WithMaxConnections configures the client to use the provided maximum number of idle connections.
-func WithMaxConnections(maxConnections int) Option {
+func WithMaxConnections(maxConnections int) OptionClient {
 	return func(o *optionClient) {
 		o.MaxConnections = maxConnections
 	}
 }
 
 // WithLogger configures the client to use the provided logger.
-func WithLogger(logger interface{}) Option {
+func WithLogger(logger interface{}) OptionClient {
 	return func(o *optionClient) {
 		o.Logger = logger
 	}
 }
 
 // WithZerologLogger configures the client to use the provided logger.
-func WithZerologLogger(logger zerolog.Logger) Option {
+func WithZerologLogger(logger zerolog.Logger) OptionClient {
 	return func(o *optionClient) {
 		o.Logger = logz.AdapterKV{Log: logger}
 	}
 }
 
 // WithInsecureSkipVerify configures the client to skip TLS verification.
-func WithInsecureSkipVerify(insecureSkipVerify bool) Option {
+func WithInsecureSkipVerify(insecureSkipVerify bool) OptionClient {
 	return func(o *optionClient) {
 		o.InsecureSkipVerify = insecureSkipVerify
 	}
 }
 
 // WithBaseURL configures the client to use the provided base URL.
-func WithBaseURL(baseURL string) Option {
+func WithBaseURL(baseURL string) OptionClient {
 	return func(o *optionClient) {
 		o.BaseURL = baseURL
 	}
 }
 
 // WithDisableRetry configures the client to disable retry.
-func WithDisableRetry(disableRetry bool) Option {
+func WithDisableRetry(disableRetry bool) OptionClient {
 	return func(options *optionClient) {
 		options.DisableRetry = disableRetry
 	}
 }
 
 // WithRetryWaitMin configures the client to use the provided minimum wait time.
-func WithRetryWaitMin(retryWaitMin time.Duration) Option {
+func WithRetryWaitMin(retryWaitMin time.Duration) OptionClient {
 	return func(options *optionClient) {
 		options.RetryWaitMin = retryWaitMin
 	}
 }
 
 // WithRetryWaitMax configures the client to use the provided maximum wait time.
-func WithRetryWaitMax(retryWaitMax time.Duration) Option {
+func WithRetryWaitMax(retryWaitMax time.Duration) OptionClient {
 	return func(options *optionClient) {
 		options.RetryWaitMax = retryWaitMax
 	}
 }
 
 // WithRetryMax configures the client to use the provided maximum number of retry.
-func WithRetryMax(retryMax int) Option {
+func WithRetryMax(retryMax int) OptionClient {
 	return func(options *optionClient) {
 		options.RetryMax = retryMax
 	}
 }
 
 // WithRetryPolicy configures the client to use the provided retry policy.
-func WithRetryPolicy(retryPolicy retryablehttp.CheckRetry) Option {
+func WithRetryPolicy(retryPolicy retryablehttp.CheckRetry) OptionClient {
 	return func(options *optionClient) {
 		options.RetryPolicy = retryPolicy
 	}
 }
 
 // WithBackoff configures the client to use the provided backoff.
-func WithBackoff(backoff retryablehttp.Backoff) Option {
+func WithBackoff(backoff retryablehttp.Backoff) OptionClient {
 	return func(options *optionClient) {
 		options.Backoff = backoff
 	}

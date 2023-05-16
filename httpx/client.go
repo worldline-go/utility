@@ -26,7 +26,7 @@ type Client struct {
 	BaseURL    *url.URL
 }
 
-func NewClient(opts ...Option) (*Client, error) {
+func NewClient(opts ...OptionClient) (*Client, error) {
 	o := optionClient{
 		PooledClient:   true,
 		MaxConnections: defaultMaxConnections,

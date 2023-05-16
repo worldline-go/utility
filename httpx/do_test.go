@@ -46,6 +46,8 @@ func (r TestRequest) Header() http.Header {
 
 func TestClient_Do(t *testing.T) {
 	retryCount := 0
+	var extraCheck func(r *http.Request) error
+
 	httpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// retry
 		if retryCount > 0 {
@@ -92,6 +94,15 @@ func TestClient_Do(t *testing.T) {
 			return
 		}
 
+		// extra check
+		if extraCheck != nil {
+			if err := extraCheck(r); err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte(fmt.Sprintf(`{"error": "%v"}`, err)))
+				return
+			}
+		}
+
 		// write response
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"request_id": "123+"}`))
@@ -125,6 +136,8 @@ func TestClient_Do(t *testing.T) {
 		retryCount int
 		short      bool
 		long       bool
+		ctxFuncs   []OptionContext
+		extraCheck func(r *http.Request) error
 	}{
 		{
 			name: "Do",
@@ -138,6 +151,16 @@ func TestClient_Do(t *testing.T) {
 					ID: "123",
 				},
 				resp: new(map[string]interface{}),
+			},
+			ctxFuncs: []OptionContext{
+				CtxWithHeader("X-Ctx", "test"),
+			},
+			extraCheck: func(r *http.Request) error {
+				if v := r.Header.Get("X-Ctx"); v != "test" {
+					return fmt.Errorf("invalid request header %s", v)
+				}
+
+				return nil
 			},
 			want: map[string]interface{}{
 				"request_id": "123+",
@@ -157,12 +180,15 @@ func TestClient_Do(t *testing.T) {
 				},
 				resp: new(map[string]interface{}),
 			},
+			ctxFuncs: []OptionContext{
+				CtxWithRetry(Retry{DisableRetry: true}),
+			},
 			want: map[string]interface{}{
 				"request_id": "123+",
 			},
 			wantErr:    true,
 			retryCount: 5,
-			long:       true,
+			// long:       true,
 		},
 	}
 	for _, tt := range tests {
@@ -177,7 +203,10 @@ func TestClient_Do(t *testing.T) {
 			}
 
 			retryCount = tt.retryCount
-			if err := c.Do(tt.args.ctx, tt.args.req, tt.args.resp); (err != nil) != tt.wantErr {
+			extraCheck = tt.extraCheck
+
+			ctx := RequestCtx(tt.args.ctx, tt.ctxFuncs...)
+			if err := c.Do(ctx, tt.args.req, tt.args.resp); (err != nil) != tt.wantErr {
 				t.Errorf("Client.Do() error = %v, wantErr %v", err, tt.wantErr)
 
 				return
