@@ -8,6 +8,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.2
 	github.com/rs/zerolog v1.29.1
 	github.com/worldline-go/logz v0.3.3
+	github.com/worldline-go/utility/contextx v0.1.0
 )
 
 require (

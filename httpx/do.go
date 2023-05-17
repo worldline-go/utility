@@ -8,6 +8,8 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+
+	"github.com/worldline-go/utility/contextx"
 )
 
 type Request interface {
@@ -97,7 +99,7 @@ func (c *Client) DoWithFunc(ctx context.Context, req Request, fn func(*http.Resp
 	uSend := c.BaseURL.ResolveReference(u)
 
 	// add context values
-	if rHeader, ok := requestCtxGet[rValueHeaderType](ctx, rValueHeader); ok {
+	if rHeader, ok := contextx.Value[rValueHeaderType](ctx, rValueHeader); ok {
 		for k := range rHeader {
 			header.Set(k, rHeader.Get(k))
 		}

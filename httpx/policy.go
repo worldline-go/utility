@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/worldline-go/utility/contextx"
 )
 
 var ResponseErrLimit int64 = 1024
@@ -25,7 +26,7 @@ func RetryPolicy(ctx context.Context, resp *http.Response, err error) (bool, err
 		return false, ctx.Err()
 	}
 
-	if retryCodes, ok := requestCtxGet[rValueRetryType](ctx, rValueRetry); ok {
+	if retryCodes, ok := contextx.Value[rValueRetryType](ctx, rValueRetry); ok {
 		if retryCodes.DisableRetry {
 			return false, nil
 		}
@@ -38,21 +39,21 @@ func RetryPolicy(ctx context.Context, resp *http.Response, err error) (bool, err
 
 		for _, enabledStatusCode := range retryCodes.EnabledStatusCodes {
 			if resp.StatusCode == enabledStatusCode {
-				return true, fmt.Errorf("force retried HTTP status %s: [%s]", resp.Status, AddSomeResponse(resp))
+				return true, fmt.Errorf("force retried HTTP status %s: [%s]", resp.Status, limitedResponse(resp))
 			}
 		}
 	}
 
 	v, err := retryablehttp.ErrorPropagatedRetryPolicy(ctx, resp, err)
 	if v && err != nil {
-		err = fmt.Errorf("%w: [%s]", err, AddSomeResponse(resp))
+		err = fmt.Errorf("%w: [%s]", err, limitedResponse(resp))
 	}
 
 	return v, err
 }
 
-// AddSomeResponse not close body, retry library draining it.
-func AddSomeResponse(resp *http.Response) []byte {
+// limitedResponse not close body, retry library draining it.
+func limitedResponse(resp *http.Response) []byte {
 	v, _ := io.ReadAll(io.LimitReader(resp.Body, ResponseErrLimit))
 
 	return v
