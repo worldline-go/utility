@@ -30,8 +30,8 @@ func Info(version string, provider auth.InfProvider) error {
 	return swagger.SetInfo(
 		swagger.WithVersion(version),
 		swagger.WithCustom(map[string]interface{}{
-			"tokenUrl": provider.GetTokenURL(),
-			"authUrl":  provider.GetAuthURL(),
+			"tokenUrl": provider.GetTokenURLExternal(),
+			"authUrl":  provider.GetAuthURLExternal(),
 		}),
 	)
 }
@@ -52,16 +52,7 @@ Inside of the general information of server:
 // @in							header
 // @name						Authorization
 // @description				Description for what is this security definition being used
-
-// @securitydefinitions.oauth2.application	OAuth2Application
-// @tokenUrl								[[ .Custom.tokenUrl ]]
-
-// @securitydefinitions.oauth2.implicit	OAuth2Implicit
-// @authorizationUrl						[[ .Custom.authUrl ]]
-
-// @securitydefinitions.oauth2.password	OAuth2Password
-// @tokenUrl								[[ .Custom.tokenUrl ]]
-
+//
 // @securitydefinitions.oauth2.accessCode	OAuth2AccessCode
 // @tokenUrl								[[ .Custom.tokenUrl ]]
 // @authorizationUrl						[[ .Custom.authUrl ]]
@@ -88,4 +79,28 @@ Use OAuth2 tags in the requests
 func (API) PostValue(c echo.Context) error {
     // ...
 }
+```
+
+All definations
+
+```go
+// @securitydefinitions.oauth2.application	OAuth2Application
+// @tokenUrl								[[ .Custom.tokenUrl ]]
+// @securitydefinitions.oauth2.implicit	OAuth2Implicit
+// @authorizationUrl						[[ .Custom.authUrl ]]
+// @securitydefinitions.oauth2.password	OAuth2Password
+// @tokenUrl								[[ .Custom.tokenUrl ]]
+// @securitydefinitions.oauth2.accessCode	OAuth2AccessCode
+// @tokenUrl								[[ .Custom.tokenUrl ]]
+// @authorizationUrl						[[ .Custom.authUrl ]]
+```
+
+## Register Echo
+
+```go
+e.GET("/swagger/*", echoSwagger.EchoWrapHandler(func(c *echoSwagger.Config) {
+	c.OAuth = &echoSwagger.OAuthConfig{
+		ClientId: provider.GetClientIDExternal(),
+	}
+}))
 ```
