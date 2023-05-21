@@ -29,6 +29,8 @@ type optionClient struct {
 
 	// BaseURL is the base URL of the service.
 	BaseURL string
+	// DisableBaseURLCheck is the flag to disable base URL check.
+	DisableBaseURLCheck bool
 
 	// DisableRetry is the flag to disable retry.
 	DisableRetry bool
@@ -107,6 +109,13 @@ func WithInsecureSkipVerify(insecureSkipVerify bool) OptionClient {
 func WithBaseURL(baseURL string) OptionClient {
 	return func(o *optionClient) {
 		o.BaseURL = baseURL
+	}
+}
+
+// WithDisableBaseURLCheck configures the client to disable base URL check.
+func WithDisableBaseURLCheck(baseURLCheck bool) OptionClient {
+	return func(o *optionClient) {
+		o.DisableBaseURLCheck = baseURLCheck
 	}
 }
 

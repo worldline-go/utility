@@ -3,6 +3,7 @@ package httpx
 import (
 	"context"
 	"net/http"
+	"net/url"
 
 	"github.com/worldline-go/utility/contextx"
 )
@@ -12,11 +13,13 @@ type rValueType string
 type (
 	rValueHeaderType = http.Header
 	rValueRetryType  = Retry
+	rValueURLType    = *url.URL
 )
 
 const (
 	rValueHeader rValueType = "header"
 	rValueRetry  rValueType = "retry"
+	rValueURL    rValueType = "url"
 )
 
 type optionContext struct {
@@ -47,6 +50,12 @@ func CtxWithHeader(key, value string) OptionContext {
 func CtxWithRetry(retry Retry) OptionContext {
 	return func(o *optionContext) {
 		o.ctx = contextx.WithValue(o.ctx, rValueRetry, retry)
+	}
+}
+
+func CtxWithBaseURL(baseURL *url.URL) OptionContext {
+	return func(o *optionContext) {
+		o.ctx = contextx.WithValue(o.ctx, rValueURL, baseURL)
 	}
 }
 

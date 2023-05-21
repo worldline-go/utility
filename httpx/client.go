@@ -42,13 +42,17 @@ func NewClient(opts ...OptionClient) (*Client, error) {
 		opt(&o)
 	}
 
-	if o.BaseURL == "" {
-		return nil, fmt.Errorf("base url is required")
-	}
+	var baseUrl *url.URL
+	if !o.DisableBaseURLCheck {
+		if o.BaseURL == "" {
+			return nil, fmt.Errorf("base url is required")
+		}
 
-	baseUrl, err := url.Parse(o.BaseURL)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse base url: %w", err)
+		var err error
+		baseUrl, err = url.Parse(o.BaseURL)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse base url: %w", err)
+		}
 	}
 
 	// create client

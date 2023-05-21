@@ -49,7 +49,12 @@ type Body interface {
 //
 // Request additional implements RequestValidator, QueryStringGenerator, Header, Body, BodyJSON
 func (c *Client) DoWithFunc(ctx context.Context, req Request, fn func(*http.Response) error) error {
-	if c.BaseURL == nil {
+	baseURL := c.BaseURL
+	if rURL, ok := contextx.Value[rValueURLType](ctx, rValueURL); ok {
+		baseURL = rURL
+	}
+
+	if baseURL == nil {
 		return fmt.Errorf("base url is required")
 	}
 
@@ -96,14 +101,14 @@ func (c *Client) DoWithFunc(ctx context.Context, req Request, fn func(*http.Resp
 		header.Set("Content-Type", "application/json")
 	}
 
-	uSend := c.BaseURL.ResolveReference(u)
-
 	// add context values
 	if rHeader, ok := contextx.Value[rValueHeaderType](ctx, rValueHeader); ok {
 		for k := range rHeader {
 			header.Set(k, rHeader.Get(k))
 		}
 	}
+
+	uSend := baseURL.ResolveReference(u)
 
 	httpReq, _ := http.NewRequestWithContext(ctx, req.Method(), uSend.String(), body)
 	httpReq.Header = header

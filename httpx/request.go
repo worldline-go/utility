@@ -2,8 +2,10 @@ package httpx
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 )
 
 type request struct {
@@ -37,4 +39,22 @@ func (c *Client) Request(ctx context.Context, method, path string, body io.Reade
 		header: header,
 		body:   body,
 	}, fn)
+}
+
+// RequestWithURL sends an HTTP request and calls the response function.
+func (c *Client) RequestWithURL(ctx context.Context, method, URL string, body io.Reader, header http.Header, fn func(*http.Response) error) error {
+	baseUrl, err := url.Parse(URL)
+	if err != nil {
+		return fmt.Errorf("parse base url: %w", err)
+	}
+
+	return c.DoWithFunc(
+		RequestCtx(ctx, CtxWithBaseURL(baseUrl)),
+		request{
+			method: method,
+			header: header,
+			body:   body,
+		},
+		fn,
+	)
 }
