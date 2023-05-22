@@ -14,20 +14,20 @@ var unUsedValue = newContextValue()
 //
 // Returns same as map's value and ok.
 func Value[T any](ctx context.Context, key any) (T, bool) {
-	var o *contextValue
+	var o *ContextValue
 	if ctx == nil {
 		o = unUsedValue
 	} else {
 		var ok bool
-		if o, ok = getValue(ctx); !ok {
+		if o, ok = Internal(ctx); !ok {
 			o = unUsedValue
 		}
 	}
 
-	o.m.RLock()
-	defer o.m.RUnlock()
+	o.M.RLock()
+	defer o.M.RUnlock()
 
-	ret, ok := o.v[key].(T)
+	ret, ok := o.V[key].(T)
 
 	return ret, ok
 }
@@ -41,15 +41,15 @@ func WithValue(ctx context.Context, key any, value any) context.Context {
 		ctx = context.Background()
 	}
 
-	o, ok := getValue(ctx)
+	o, ok := Internal(ctx)
 	if !ok {
 		return WithValue(Init(ctx), key, value)
 	}
 
-	o.m.Lock()
-	defer o.m.Unlock()
+	o.M.Lock()
+	defer o.M.Unlock()
 
-	o.v[key] = value
+	o.V[key] = value
 
 	return ctx
 }
@@ -65,11 +65,11 @@ func Init(ctx context.Context) context.Context {
 	return context.WithValue(ctx, ctxInternal, newContextValue())
 }
 
-func getValue(ctx context.Context) (*contextValue, bool) {
+func Internal(ctx context.Context) (*ContextValue, bool) {
 	if ctx == nil {
 		return nil, false
 	}
 
-	v, ok := ctx.Value(ctxInternal).(*contextValue)
+	v, ok := ctx.Value(ctxInternal).(*ContextValue)
 	return v, ok
 }
