@@ -2,7 +2,6 @@ package httpx
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 )
 
@@ -14,17 +13,7 @@ var (
 )
 
 func UnexpectedResponseError(resp *http.Response) error {
-	const truncateBodySize = 256
-
-	limiter := io.LimitedReader{
-		R: resp.Body,
-		N: truncateBodySize,
-	}
-
-	partialBody, err := io.ReadAll(&limiter)
-	if err != nil {
-		return fmt.Errorf("read response body error: %w", err)
-	}
+	partialBody := limitedResponse(resp)
 
 	return fmt.Errorf("unexpected response (%d): %s", resp.StatusCode, string(partialBody))
 }

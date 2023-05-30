@@ -53,7 +53,7 @@ func TestClient_Do(t *testing.T) {
 		if retryCount > 0 {
 			retryCount--
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(`{"error": "internal server error"}`))
+			w.Write([]byte(`{"error": "internal server error Ipsum eiusmod non officia cillum est ullamco qui est pariatur id. Tempor incididunt excepteur officia aute ullamco in incididunt. Dolor veniam reprehenderit non aliqua. Anim laboris ut commodo fugiat exercitation cupidatat exercitation consectetur aliqua consequat sint est eu occaecat. Esse qui exercitation magna consectetur pariatur ut adipisicing aute qui ad ea incididunt sint eu. Mollit sunt do ipsum sunt ex proident duis. Cupidatat cillum nulla sint cupidatat cupidatat enim et commodo duis qui sunt eiusmod commodo. Aliqua elit cupidatat nulla enim excepteur cupidatat tempor aliquip tempor consequat qui. Commodo veniam excepteur cillum Lorem minim. Magna ipsum veniam ipsum cillum. Mollit ullamco veniam qui elit quis duis amet laboris in eiusmod. Irure est adipisicing reprehenderit laboris occaecat anim. Excepteur fugiat laborum fugiat fugiat deserunt ut ex adipisicing culpa occaecat pariatur et aliqua. Duis proident officia sint adipisicing aute aute incididunt quis esse. Quis ex sint magna pariatur exercitation aliqua do reprehenderit occaecat aute est dolor voluptate reprehenderit. "}`))
 
 			return
 		}
@@ -112,6 +112,7 @@ func TestClient_Do(t *testing.T) {
 
 	httpxClient, err := NewClient(
 		WithBaseURL(httpServer.URL),
+		WithRetryMax(2),
 	)
 	if err != nil {
 		t.Errorf("NewClient() error = %v", err)
@@ -181,7 +182,7 @@ func TestClient_Do(t *testing.T) {
 				resp: new(map[string]interface{}),
 			},
 			ctxFuncs: []OptionContext{
-				CtxWithRetry(Retry{DisableRetry: true}),
+				// CtxWithRetry(Retry{DisableRetry: true}),
 			},
 			want: map[string]interface{}{
 				"request_id": "123+",
@@ -206,10 +207,16 @@ func TestClient_Do(t *testing.T) {
 			extraCheck = tt.extraCheck
 
 			ctx := RequestCtx(tt.args.ctx, tt.ctxFuncs...)
-			if err := c.Do(ctx, tt.args.req, tt.args.resp); (err != nil) != tt.wantErr {
-				t.Errorf("Client.Do() error = %v, wantErr %v", err, tt.wantErr)
+			if err := c.DoWithFunc(ctx, tt.args.req, func(r *http.Response) error {
+				if err := json.NewDecoder(r.Body).Decode(tt.args.resp); err != nil {
+					return err
+				}
 
-				return
+				return nil
+			}); err != nil {
+				if !tt.wantErr {
+					t.Errorf("Client.Do() error = %v, wantErr %v", err, tt.wantErr)
+				}
 			}
 
 			if tt.wantErr {

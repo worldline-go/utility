@@ -10,7 +10,7 @@ import (
 	"github.com/worldline-go/utility/contextx"
 )
 
-var ResponseErrLimit int64 = 1024
+var ResponseErrLimit int64 = 1 << 20 // 1MB
 
 type Retry struct {
 	DisableRetry        bool
