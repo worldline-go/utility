@@ -17,3 +17,11 @@ func UnexpectedResponseError(resp *http.Response) error {
 
 	return fmt.Errorf("unexpected response (%d): %s", resp.StatusCode, string(partialBody))
 }
+
+func UnexpectedResponse(resp *http.Response) error {
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return UnexpectedResponseError(resp)
+	}
+
+	return nil
+}

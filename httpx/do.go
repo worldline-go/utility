@@ -140,8 +140,8 @@ func (c *Client) Do(ctx context.Context, req Request, resp interface{}) error {
 }
 
 func defaultResponseFunc(resp *http.Response, data interface{}) error {
-	if !(resp.StatusCode >= 200 && resp.StatusCode < 300) {
-		return UnexpectedResponseError(resp)
+	if err := UnexpectedResponse(resp); err != nil {
+		return err
 	}
 
 	// 204s, for example
